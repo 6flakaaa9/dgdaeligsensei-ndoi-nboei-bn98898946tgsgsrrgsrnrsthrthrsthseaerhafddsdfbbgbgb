@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>«Те Самые» — Кабинет Директора</title>
+  <meta name="theme-color" content="#1c1b1a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="stylesheet" href="./app.css">
+</head>
+<body>
+  <div id="app">
+    <!-- Top Header -->
+    <header class="app-header">
+      <div class="header-brand">
+        <img src="/images/logo-seal.png" class="brand-seal" alt="Печать треста" onerror="this.src='/images/logo.png'">
+        <div class="brand-text">
+          <span class="brand-subtitle">ГЛАВПИРОЖТОРГ СССР</span>
+          <h1 class="brand-title">Кабинет Директора</h1>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button id="btn-sync" class="icon-btn" title="Синхронизировать данные" aria-label="Обновить">
+          <svg class="spin-icon" viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" fill="none" stroke-width="2.2" stroke-linecap="round"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
+        </button>
+        <button id="btn-quick-lock" class="icon-btn lock-btn" title="Заблокировать экран" aria-label="Блокировка">
+          <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="2.2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Network & Server Status Banner -->
+    <div id="status-bar" class="status-bar status-online">
+      <div class="status-indicator">
+        <span class="status-dot"></span>
+        <span id="status-text">Связь с MariaDB установлена (4ms)</span>
+      </div>
+      <div class="status-security-badge" id="btn-open-security" title="Щит безопасности активен">
+        <span class="shield-icon">🛡️</span>
+        <span class="shield-label">Anti-DDoS Shield</span>
+      </div>
+    </div>
+
+    <!-- Main Views Container -->
+    <main class="app-main">
+      <!-- 1. Orders Tab -->
+      <section id="tab-orders" class="tab-view active">
+        <div class="view-header">
+          <div class="search-box">
+            <svg class="search-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" fill="none" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="order-search" placeholder="Поиск по талону, имени, телефону..." autocomplete="off">
+            <button id="btn-clear-search" class="clear-btn" style="display:none;">✕</button>
+          </div>
+          <div class="status-filter-pills" id="order-filter-pills">
+            <button class="filter-pill active" data-filter="all">Все <span class="pill-count" id="count-all">0</span></button>
+            <button class="filter-pill" data-filter="new">Новые <span class="pill-count count-danger" id="count-new">0</span></button>
+            <button class="filter-pill" data-filter="accepted">В сборке <span class="pill-count count-warning" id="count-accepted">0</span></button>
+            <button class="filter-pill" data-filter="ready">Готовы <span class="pill-count count-success" id="count-ready">0</span></button>
+            <button class="filter-pill" data-filter="completed">Выданы <span class="pill-count" id="count-completed">0</span></button>
+          </div>
+        </div>
+
+        <div id="orders-list" class="orders-list">
+          <div class="loading-state">
+            <div class="spinner"></div>
+            <p>Загрузка талонов из базы MariaDB...</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. Products / Stock Tab -->
+      <section id="tab-products" class="tab-view">
+        <div class="section-title-bar">
+          <div>
+            <h2 class="view-title">Витрина и Стоп-лист</h2>
+            <p class="view-desc">Управление наличием и отпускными ценами кондитерских изделий</p>
+          </div>
+          <button id="btn-refresh-products" class="small-btn">Обновить</button>
+        </div>
+        <div id="products-list" class="products-list">
+          <!-- Loaded dynamically -->
+        </div>
+      </section>
+
+      <!-- 3. Reviews Tab -->
+      <section id="tab-reviews" class="tab-view">
+        <div class="section-title-bar">
+          <div>
+            <h2 class="view-title">Книга отзывов</h2>
+            <p class="view-desc">Модерация записей покупателей и резолюции директора</p>
+          </div>
+          <div class="review-filter-tabs">
+            <button class="review-tab-btn active" data-rev-filter="all">Все</button>
+            <button class="review-tab-btn" data-rev-filter="pending">На контроле</button>
+          </div>
+        </div>
+        <div id="reviews-list" class="reviews-list">
+          <!-- Loaded dynamically -->
+        </div>
+      </section>
+
+      <!-- 4. Analytics Tab -->
+      <section id="tab-analytics" class="tab-view">
+        <h2 class="view-title">Сводка за смену</h2>
+        <div class="kpi-grid">
+          <div class="kpi-card">
+            <span class="kpi-label">Выручка сегодня</span>
+            <div class="kpi-val" id="kpi-revenue">0 ₽</div>
+            <span class="kpi-sub">по выданным талонам</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">Всего заказов</span>
+            <div class="kpi-val" id="kpi-orders-count">0</div>
+            <span class="kpi-sub" id="kpi-ready-sub">0 готовы к выдаче</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">Средний чек</span>
+            <div class="kpi-val" id="kpi-avg-check">0 ₽</div>
+            <span class="kpi-sub">по ГОСТ-нормативу</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">Исполнение</span>
+            <div class="kpi-val" id="kpi-rate">100%</div>
+            <span class="kpi-sub">без рекламаций</span>
+          </div>
+        </div>
+
+        <div class="card analytics-card">
+          <h3 class="card-title">Популярность пирожных</h3>
+          <div id="top-products-chart" class="chart-list">
+            <!-- Dynamic popular items -->
+          </div>
+        </div>
+
+        <div class="card analytics-card">
+          <h3 class="card-title">Состояние MariaDB и Anti-DDoS</h3>
+          <div class="server-stat-row">
+            <span>Статус СУБД:</span>
+            <strong id="stat-db-status" class="text-success">MariaDB 13.0.2 (В норме)</strong>
+          </div>
+          <div class="server-stat-row">
+            <span>Проверено входящих запросов:</span>
+            <strong id="stat-req-count">0</strong>
+          </div>
+          <div class="server-stat-row">
+            <span>Отражено DDoS / Бот атак:</span>
+            <strong id="stat-blocked-count" class="text-danger">0</strong>
+          </div>
+          <div class="server-stat-row">
+            <span>Активных IP-блокировок:</span>
+            <strong id="stat-bans-count">0</strong>
+          </div>
+        </div>
+      </section>
+
+      <!-- 5. Security & Settings Tab -->
+      <section id="tab-security" class="tab-view">
+        <h2 class="view-title">Защита и Параметры</h2>
+        
+        <!-- Anti-Hack Shield Card -->
+        <div class="card shield-card">
+          <div class="shield-header">
+            <div class="shield-emblem">🛡️</div>
+            <div>
+              <h3>Комплексный щит треста</h3>
+              <p>Активная защита от взлома, брутфорса и перехвата</p>
+            </div>
+            <span class="status-tag tag-active">АКТИВЕН</span>
+          </div>
+          <div class="shield-features">
+            <div class="feature-item">✓ Anti-Brute-Force: ограничение попыток входа</div>
+            <div class="feature-item">✓ Honeypot: скрытые ловушки спам-ботов</div>
+            <div class="feature-item">✓ Anti-Replay: криптографические метки времени</div>
+            <div class="feature-item">✓ XSS & SQLi Sanitization фильтры</div>
+          </div>
+        </div>
+
+        <!-- Security Event Audit Log -->
+        <div class="card">
+          <div class="card-title-row">
+            <h3 class="card-title">Журнал безопасности</h3>
+            <button id="btn-refresh-logs" class="link-btn">Обновить</button>
+          </div>
+          <div id="security-logs-container" class="security-logs-list">
+            <!-- Dynamic logs -->
+          </div>
+        </div>
+
+        <!-- Server Host Configuration -->
+        <div class="card">
+          <h3 class="card-title">Подключение к API Серверу</h3>
+          <p class="card-subtitle">Адрес для связи приложения с сервером MariaDB</p>
+          <div class="host-input-group">
+            <input type="text" id="cfg-server-url" value="http://127.0.0.1:3001" placeholder="http://127.0.0.1:3001">
+            <button id="btn-test-connection" class="small-btn">Проверить</button>
+          </div>
+          <div class="host-presets">
+            <button class="preset-chip" data-host="http://127.0.0.1:3001">Локальный (127.0.0.1)</button>
+            <button class="preset-chip" data-host="http://10.0.2.2:3001">Эмулятор (10.0.2.2)</button>
+            <button class="preset-chip" id="btn-auto-host">Определить Wi-Fi IP</button>
+          </div>
+        </div>
+
+        <!-- Emergency Store Lock -->
+        <div class="card danger-card">
+          <h3 class="card-title text-danger">Экстренная остановка приёма заказов</h3>
+          <p class="card-subtitle">Мгновенно переводит витрину сайта в режим «Все кондитерские цеха перегружены»</p>
+          <button id="btn-emergency-stop" class="danger-btn">Активировать стоп-заказ</button>
+        </div>
+
+        <!-- APK Download & Build Info -->
+        <div class="card">
+          <h3 class="card-title">О приложении для Android</h3>
+          <div class="apk-info-box">
+            <div class="apk-icon">📱</div>
+            <div>
+              <strong>«Те Самые» — Кабинет Директора APK</strong>
+              <div class="text-muted">Версия: 1.0.0 (ГОСТ-1985) · Сборка Android 14+</div>
+            </div>
+          </div>
+          <a href="/admin-tesamye.apk" download="admin-tesamye.apk" class="secondary-btn download-apk-btn" id="btn-download-apk">
+            <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+            Скачать APK файл на телефон
+          </a>
+        </div>
+
+        <!-- Logout -->
+        <div class="settings-actions">
+          <button id="btn-logout" class="outline-btn w-100">Завершить сеанс директора</button>
+        </div>
+      </section>
+    </main>
+
+    <!-- Bottom Navigation Bar -->
+    <nav class="bottom-nav">
+      <button class="nav-item active" data-tab="tab-orders">
+        <span class="nav-icon">📋</span>
+        <span class="nav-label">Заказы</span>
+        <span class="nav-badge" id="nav-orders-badge" style="display:none;">0</span>
+      </button>
+      <button class="nav-item" data-tab="tab-products">
+        <span class="nav-icon">🍰</span>
+        <span class="nav-label">Витрина</span>
+      </button>
+      <button class="nav-item" data-tab="tab-reviews">
+        <span class="nav-icon">📖</span>
+        <span class="nav-label">Отзывы</span>
+      </button>
+      <button class="nav-item" data-tab="tab-analytics">
+        <span class="nav-icon">📊</span>
+        <span class="nav-label">Сводка</span>
+      </button>
+      <button class="nav-item" data-tab="tab-security">
+        <span class="nav-icon">🛡️</span>
+        <span class="nav-label">Защита</span>
+      </button>
+    </nav>
+
+    <!-- Modal: Ready Pickup Time Picker (Admin Chooses When Order is Ready) -->
+    <div id="modal-slot-picker" class="modal-backdrop" style="display:none;">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3>Назначить время готовности</h3>
+          <button class="modal-close" data-close-modal>✕</button>
+        </div>
+        <div class="modal-body">
+          <p class="modal-lead">Укажите, когда покупатель может забрать заказ <span id="slot-modal-ticket" class="ticket-tag"></span>:</p>
+          <div class="quick-slots-grid">
+            <button class="slot-chip" data-slot="Через 15 минут">Через 15 мин</button>
+            <button class="slot-chip" data-slot="Через 30 минут">Через 30 мин</button>
+            <button class="slot-chip" data-slot="Через 45 минут">Через 45 мин</button>
+            <button class="slot-chip" data-slot="Через 1 час">Через 1 час</button>
+            <button class="slot-chip" data-slot="Сегодня к 14:00">К 14:00</button>
+            <button class="slot-chip" data-slot="Сегодня к 16:30">К 16:30</button>
+            <button class="slot-chip" data-slot="Сегодня к 18:00">К 18:00</button>
+            <button class="slot-chip" data-slot="Завтра с утра (09:00)">Завтра к 09:00</button>
+          </div>
+          <div class="custom-slot-input">
+            <label for="custom-slot-val">Или своё время:</label>
+            <input type="text" id="custom-slot-val" placeholder="например, Сегодня к 15:45">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="secondary-btn" data-close-modal>Отмена</button>
+          <button id="btn-save-slot" class="primary-btn">Зафиксировать время</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal: Review Moderation -->
+    <div id="modal-review" class="modal-backdrop" style="display:none;">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3>Резолюция по отзыву</h3>
+          <button class="modal-close" data-close-modal>✕</button>
+        </div>
+        <div class="modal-body">
+          <div id="modal-review-info" class="review-preview-box"></div>
+          <div class="resolution-templates">
+            <label>Быстрые шаблоны резолюции:</label>
+            <div class="chips-row">
+              <button class="chip" data-res="Рассмотрено. Объявить благодарность смене цеха №1">Благодарность цеху</button>
+              <button class="chip" data-res="Принято к сведению. Норма сахара и бисквита проверена ОТК">Проверено ОТК</button>
+              <button class="chip" data-res="Одобрено дирекцией треста к публикации в Книге Почёта">В Книгу Почёта</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="review-resolution-input">Текст резолюции директора:</label>
+            <textarea id="review-resolution-input" rows="3" placeholder="Введите официальный ответ директора..."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button id="btn-delete-review" class="danger-btn">Удалить спам</button>
+          <button id="btn-save-review" class="primary-btn">Одобрить и сохранить</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Login Screen Overlay (With Anti-Brute-Force & Honeypot) -->
+    <div id="auth-screen" class="auth-screen">
+      <div class="auth-box">
+        <div class="auth-emblem">
+          <img src="/images/logo-seal.png" alt="Герб треста" onerror="this.src='/images/logo.png'">
+        </div>
+        <div class="auth-titles">
+          <span class="auth-super">ГЛАВПИРОЖТОРГ СССР · ТРЕСТ «ТЕ САМЫЕ»</span>
+          <h2 class="auth-title">Пропускной пункт дирекции</h2>
+          <p class="auth-subtitle">Вход строго для уполномоченных лиц треста</p>
+        </div>
+
+        <!-- Security Warning Banner (Shows on lockout/bruteforce) -->
+        <div id="auth-security-alert" class="auth-alert" style="display:none;"></div>
+
+        <form id="auth-form" class="auth-form" autocomplete="off">
+          <!-- Honeypot Bot Trap (Invisible to humans, traps automated scrapers) -->
+          <div style="opacity: 0; position: absolute; top: -9999px; left: -9999px; height: 0; width: 0; z-index: -1;">
+            <input type="text" name="_hp_security_trap" id="_hp_security_trap" tabindex="-1" autocomplete="off">
+            <input type="text" name="website_url_field" id="website_url_field" tabindex="-1" autocomplete="off">
+          </div>
+
+          <div class="form-field">
+            <label for="auth-login">Логин директора:</label>
+            <div class="input-with-icon">
+              <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              <input type="text" id="auth-login" value="KatyaOwner" required placeholder="Введите логин">
+            </div>
+          </div>
+
+          <div class="form-field">
+            <label for="auth-password">Пароль допуска:</label>
+            <div class="input-with-icon">
+              <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              <input type="password" id="auth-password" required placeholder="Введите пароль">
+              <button type="button" id="btn-toggle-pwd" class="pwd-eye-btn" title="Показать пароль">👁️</button>
+            </div>
+          </div>
+
+          <div class="auth-helpers">
+            <label class="remember-label">
+              <input type="checkbox" id="auth-remember" checked>
+              <span>Запомнить на этом устройстве</span>
+            </label>
+          </div>
+
+          <button type="submit" id="btn-submit-auth" class="primary-btn w-100">
+            <span class="btn-text">Войти в кабинет директора</span>
+            <span class="btn-spinner" style="display:none;"></span>
+          </button>
+
+          <!-- Server connection switcher for Wi-Fi / LAN -->
+          <div class="auth-server-toggle-wrap">
+            <button type="button" id="btn-toggle-auth-server" class="auth-server-toggle-btn" title="Настроить IP сервера">
+              <span class="auth-server-dot"></span>
+              <span id="auth-current-host-label">Сервер: 192.168.0.153:3001</span>
+              <span class="auth-server-gear">⚙️</span>
+            </button>
+            <div id="auth-server-dropdown" class="auth-server-dropdown" style="display: none;">
+              <div class="server-dropdown-title">Адрес API-сервера MariaDB:</div>
+              <div class="server-input-row">
+                <input type="text" id="auth-custom-server-ip" placeholder="http://192.168.0.153:3001">
+                <button type="button" id="btn-apply-auth-server" class="small-btn">ОК</button>
+              </div>
+              <div class="server-quick-chips">
+                <button type="button" class="mini-chip" data-set-host="http://192.168.0.153:3001">Wi-Fi (192.168.0.153)</button>
+                <button type="button" class="mini-chip" data-set-host="http://127.0.0.1:3001">127.0.0.1</button>
+                <button type="button" class="mini-chip" data-set-host="http://10.0.2.2:3001">Эмулятор</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="auth-security-notice">
+            <span class="lock-shield">🔒</span>
+            <span>Защита от взлома: Anti-Brute-Force &amp; Fail2Ban. Попытки логируются.</span>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Auto-Lock Screen (Appears on 5 min inactivity) -->
+    <div id="lock-screen" class="lock-screen" style="display:none;">
+      <div class="lock-screen-content">
+        <div class="lock-icon">🔒</div>
+        <h2>Сессия приостановлена</h2>
+        <p>Кабинет заблокирован в целях безопасности из-за отсутствия активности</p>
+        <button id="btn-unlock-screen" class="primary-btn">Разблокировать кабинет</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="./app.js"></script>
+</body>
+</html>
